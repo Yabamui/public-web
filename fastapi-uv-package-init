@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대화형 FastAPI 배포 가이드 | uv & Docker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Harmony -->
+    <!-- Application Structure Plan: 이 SPA는 보고서의 선형 구조를 따르지 않고, 개발자의 실제 작업 흐름에 기반한 테마별 섹션으로 정보를 재구성했습니다. '소개', '프로젝트 구성', '로컬 실행', '도커 배포', '핵심 개념'으로 이어지는 구조는 사용자가 필요한 정보에 빠르게 접근하고 각 단계의 연관성을 자연스럽게 이해하도록 돕습니다. 상단 탐색 바를 통해 비선형적 탐색이 가능하며, 탭, 아코디언, 대화형 차트와 같은 UI 요소는 복잡한 정보를 시각적으로 분해하여 학습 부담을 줄이고 사용자 참여를 유도합니다. 이 구조는 기술 보고서를 교육적이고 탐구적인 경험으로 전환시키는 데 가장 효과적이라고 판단했습니다. -->
+    <!-- Visualization & Content Choices: [보고서 정보: uv의 성능 -> 목표: 비교 -> 시각화: 막대 차트 -> 상호작용: 툴팁 -> 정당성: uv의 속도 우위를 시각적으로 강조 -> 라이브러리: Chart.js], [보고서 정보: 프로젝트 구조 -> 목표: 정리 -> 시각화: 파일 트리 -> 상호작용: 호버 시 설명 표시 -> 정당성: 익숙한 UI로 복잡한 구조를 명확히 전달 -> 방법: HTML/CSS], [보고서 정보: Dockerfile 내용 -> 목표: 설명 -> 시각화: 코드 블록 -> 상호작용: 주요 라인에 호버 시 설명 툴팁 표시 -> 정당성: 코드의 맥락 안에서 다단계 빌드 같은 복잡한 개념을 쉽게 설명 -> 방법: HTML/CSS/JS], [보고서 정보: 개발 vs. 프로덕션 서버 -> 목표: 비교 -> 시각화: 비교 테이블 -> 상호작용: 없음 -> 정당성: 두 환경의 장단점을 명확하고 간결하게 대조 -> 방법: HTML/Tailwind] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #FDFBF6;
+            color: #3C3C3C;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #A69D8D;
+            border-bottom-color: #A69D8D;
+        }
+        .tab-btn {
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #A69D8D;
+            color: #FDFBF6;
+        }
+        .tech-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .code-block {
+            background-color: #2d3748; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4a5568; /* slate-600 */
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #718096; /* slate-500 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .file-tree ul {
+            padding-left: 1.5rem;
+            border-left: 1px dashed #D1C7B8;
+        }
+        .file-tree li {
+            position: relative;
+            padding-left: 1rem;
+        }
+        .file-tree li::before {
+            content: '📄';
+            position: absolute;
+            left: -0.5rem;
+        }
+        .file-tree li.folder::before {
+            content: '📁';
+        }
+        .tooltip {
+            visibility: hidden;
+            width: 250px;
+            background-color: #3C3C3C;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+        }
+        .tooltip-trigger:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">FastAPI 배포 가이드</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#intro" class="nav-link font-medium">소개</a>
+                <a href="#setup" class="nav-link font-medium">프로젝트 구성</a>
+                <a href="#local-run" class="nav-link font-medium">로컬 실행</a>
+                <a href="#docker" class="nav-link font-medium">도커 배포</a>
+                <a href="#concepts" class="nav-link font-medium">핵심 개념</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Section 1: Introduction -->
+        <section id="intro" class="mb-24 text-center">
+            <h2 class="text-4xl font-bold mb-4 text-[#A69D8D]">최신 기술로 FastAPI 백엔드 구축하기</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                이 가이드는 `labs-products-backend` 프로젝트를 예시로, macOS 환경에서 FastAPI와 차세대 패키지 매니저 `uv`, 그리고 Docker를 사용하여 현대적이고 효율적인 백엔드 시스템을 구축하고 배포하는 전 과정을 대화형으로 안내합니다.
+            </p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="tech-card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="toggleDetail('fastapi-detail')">
+                    <h3 class="text-2xl font-bold mb-2">🚀 FastAPI</h3>
+                    <p class="text-gray-600">고성능 API 구축을 위한 현대적인 웹 프레임워크</p>
+                    <p id="fastapi-detail" class="hidden mt-4 text-left text-sm text-gray-500">Python 3.8+의 타입 힌트에 기반하여 데이터 유효성 검사, 직렬화, 그리고 자동 API 문서 생성을 지원하여 개발 생산성을 극대화합니다.</p>
+                </div>
+                <div class="tech-card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="toggleDetail('uv-detail')">
+                    <h3 class="text-2xl font-bold mb-2">⚡️ uv</h3>
+                    <p class="text-gray-600">Rust로 제작된 초고속 Python 패키지 매니저</p>
+                    <p id="uv-detail" class="hidden mt-4 text-left text-sm text-gray-500">`pip` 및 `venv`와 같은 도구들을 대체하며, 10-100배 빠른 속도와 신뢰할 수 있는 의존성 관리로 개발 워크플로우를 혁신합니다.</p>
+                </div>
+                <div class="tech-card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="toggleDetail('docker-detail')">
+                    <h3 class="text-2xl font-bold mb-2">🐳 Docker</h3>
+                    <p class="text-gray-600">애플리케이션 컨테이너화 및 배포 표준</p>
+                    <p id="docker-detail" class="hidden mt-4 text-left text-sm text-gray-500">애플리케이션과 모든 종속성을 컨테이너에 담아 어떤 환경에서든 동일하게 실행되도록 보장하여, 배포의 일관성과 이식성을 제공합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Project Setup -->
+        <section id="setup" class="mb-24">
+            <h2 class="text-3xl font-bold mb-8 text-center">프로젝트 구성 워크플로우</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                `uv`를 사용하여 프로젝트를 설정하는 단계별 가이드입니다. 각 단계를 따라가며 현대적인 Python 프로젝트의 구조를 직접 구성해보세요.
+            </p>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="setup-tabs" class="flex border-b">
+                        <button class="tab-btn flex-1 p-4 font-semibold text-gray-600 active" onclick="switchSetupTab(event, 'step1')">1. uv 설치</button>
+                        <button class="tab-btn flex-1 p-4 font-semibold text-gray-600" onclick="switchSetupTab(event, 'step2')">2. 프로젝트 초기화</button>
+                        <button class="tab-btn flex-1 p-4 font-semibold text-gray-600" onclick="switchSetupTab(event, 'step3')">3. 구조 및 의존성</button>
+                    </div>
+                    <div class="p-8">
+                        <div id="step1" class="setup-content">
+                            <h3 class="text-xl font-bold mb-4">macOS에 `uv` 설치하기</h3>
+                            <p class="mb-4 text-gray-600">터미널에 아래 명령어를 복사하여 실행하세요.</p>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code>
+                            </div>
+                        </div>
+                        <div id="step2" class="setup-content hidden">
+                            <h3 class="text-xl font-bold mb-4">`uv`로 새 프로젝트 시작하기</h3>
+                            <p class="mb-4 text-gray-600">이 명령어는 배포 가능한 패키지 구조(`src` 레이아웃)로 프로젝트를 생성합니다.</p>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                <code>uv init --package labs-products-backend</code>
+                            </div>
+                        </div>
+                        <div id="step3" class="setup-content hidden">
+                            <h3 class="text-xl font-bold mb-4">권장 프로젝트 구조 및 의존성 추가</h3>
+                            <p class="mb-4 text-gray-600">생성된 프로젝트 구조는 확장성과 유지보수성을 높입니다. `uv add`로 필요한 패키지를 추가할 수 있습니다.</p>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="file-tree bg-gray-50 p-4 rounded-lg">
+                                    <ul>
+                                        <li class="folder">src/
+                                            <ul>
+                                                <li class="folder">labs_products_backend/
+                                                    <ul>
+                                                        <li>main.py</li>
+                                                        <li>config.py</li>
+                                                        <li class="folder">routers/</li>
+                                                        <li class="folder">models/</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>pyproject.toml</li>
+                                        <li>Dockerfile</li>
+                                        <li>docker-compose.yml</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <p class="mb-2 font-semibold">FastAPI 의존성 추가:</p>
+                                    <div class="code-block mb-4">
+                                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                        <code>uv add fastapi uvicorn[standard] pydantic-settings</code>
+                                    </div>
+                                    <p class="mb-2 font-semibold">프로덕션 서버 의존성 추가:</p>
+                                      <div class="code-block">
+                                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                        <code>uv add gunicorn uvicorn-worker</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Local Run & Code Explorer -->
+        <section id="local-run" class="mb-24">
+            <h2 class="text-3xl font-bold mb-8 text-center">로컬 실행 및 코드 탐색기</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                애플리케이션을 로컬 환경에서 실행하고, 핵심 파일들의 코드를 직접 확인해보세요. `uv run`은 프로젝트의 가상 환경에서 명령어를 실행하여 일관성을 보장합니다.
+            </p>
+            <div class="max-w-4xl mx-auto">
+                 <h3 class="text-xl font-bold mb-4">로컬 개발 서버 실행</h3>
+                 <div class="code-block mb-8">
+                    <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    <code>uv run python -m uvicorn src.labs_products_backend.main:app --reload</code>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="code-tabs" class="flex border-b bg-gray-50">
+                        <button class="tab-btn flex-1 p-3 text-sm md:text-base font-semibold text-gray-600 active" onclick="switchCodeTab(event, 'main-py')">main.py</button>
+                        <button class="tab-btn flex-1 p-3 text-sm md:text-base font-semibold text-gray-600" onclick="switchCodeTab(event, 'health-py')">routers/health.py</button>
+                        <button class="tab-btn flex-1 p-3 text-sm md:text-base font-semibold text-gray-600" onclick="switchCodeTab(event, 'config-py')">config.py</button>
+                    </div>
+                    <div>
+                        <div id="main-py" class="code-content">
+<pre class="code-block text-sm"><code>from fastapi import FastAPI
+from .routers import health
+from .config import settings
+
+app = FastAPI(
+    title=settings.app_name,
+    version="0.1.0",
+)
+
+app.include_router(health.router, prefix="/health", tags=["Health"])
+
+# @app.get("/")
+# async def root():
+#     return {"message": "Hello World"}
+</code></pre>
+                        </div>
+                        <div id="health-py" class="code-content hidden">
+<pre class="code-block text-sm"><code>from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/status")
+async def get_health_status():
+    return {"status": "ok"}
+</code></pre>
+                        </div>
+                        <div id="config-py" class="code-content hidden">
+<pre class="code-block text-sm"><code>from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    app_name: str = "Labs Products Backend"
+    debug: bool = False
+    
+    # 중요: 프로덕션에서는 환경 변수로 설정
+    database_url: str = "sqlite:///./sql_app.db" 
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+settings = Settings()
+</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Docker Deployment -->
+        <section id="docker" class="mb-24">
+            <h2 class="text-3xl font-bold mb-8 text-center">Docker를 이용한 배포</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                최적화된 `Dockerfile`과 `docker-compose.yml`을 통해 애플리케이션을 컨테이너화하고 배포하는 방법을 알아봅니다. 각 파일의 구조와 실행 명령어를 확인하세요.
+            </p>
+            <div class="max-w-5xl mx-auto">
+                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="docker-tabs" class="flex border-b bg-gray-50">
+                        <button class="tab-btn flex-1 p-3 font-semibold text-gray-600 active" onclick="switchDockerTab(event, 'dockerfile')">Dockerfile</button>
+                        <button class="tab-btn flex-1 p-3 font-semibold text-gray-600" onclick="switchDockerTab(event, 'compose')">docker-compose.yml</button>
+                        <button class="tab-btn flex-1 p-3 font-semibold text-gray-600" onclick="switchDockerTab(event, 'commands')">실행 명령어</button>
+                    </div>
+                    <div class="p-2 md:p-6">
+                        <div id="dockerfile" class="docker-content">
+<pre class="code-block text-xs md:text-sm"><code># Stage 1: builder
+<span class="tooltip-trigger relative">FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+    <span class="tooltip">uv가 사전 설치된 공식 이미지를 사용하여 빌드 단계를 시작합니다.</span>
+</span>
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+
+<span class="tooltip-trigger relative">RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project --no-dev
+    <span class="tooltip">Docker의 캐시 마운트를 활용하여 의존성을 효율적으로 설치합니다. `--locked`는 `uv.lock` 파일을 사용해 재현성을 보장합니다.</span>
+</span>
+COPY src /app/src
+RUN uv pip install . --no-deps
+
+# Stage 2: runner
+<span class="tooltip-trigger relative">FROM python:3.12-slim-bookworm AS runner
+    <span class="tooltip">최종 이미지는 가벼운 python-slim 이미지로 만들어 크기를 최소화합니다. (다단계 빌드)</span>
+</span>
+WORKDIR /app
+<span class="tooltip-trigger relative">COPY --from=builder /app/.venv /app/.venv
+    <span class="tooltip">빌드 단계에서 설치된 가상 환경 전체를 복사해옵니다.</span>
+</span>
+ENV PATH="/app/.venv/bin:$PATH"
+
+COPY src /app/src
+EXPOSE 8000
+
+<span class="tooltip-trigger relative">CMD ["gunicorn", "src.labs_products_backend.main:app", "--workers", "4", "--worker-class", "uvicorn_worker.UvicornWorker", "--bind", "0.0.0.0:8000"]
+    <span class="tooltip">프로덕션 환경에서는 Gunicorn 프로세스 매니저와 Uvicorn 워커를 함께 사용해 안정성과 성능을 확보합니다.</span>
+</span></code></pre>
+                        </div>
+                        <div id="compose" class="docker-content hidden">
+<pre class="code-block text-sm"><code>version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    # 로컬 개발 시 .env 파일 사용
+    env_file:
+      - .env
+    # 개발 시 코드 변경 자동 반영을 위한 볼륨 마운트
+    # 프로덕션에서는 이 라인을 제거하는 것을 권장합니다.
+    volumes:
+      - ./src:/app/src
+</code></pre>
+                        </div>
+                        <div id="commands" class="docker-content hidden">
+                             <h3 class="text-xl font-bold mb-4">컨테이너 빌드 및 실행</h3>
+                             <div class="code-block mb-6">
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                <code>docker-compose up --build -d</code>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4">컨테이너 중지 및 삭제</h3>
+                             <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                                <code>docker-compose down</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Core Concepts -->
+        <section id="concepts" class="mb-24">
+            <h2 class="text-3xl font-bold mb-8 text-center">핵심 개념 비교 분석</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                이 프로젝트에서 사용된 핵심 기술들의 장점을 시각적으로 비교하고 이해합니다. 왜 `uv`를 선택했는지, 프로덕션 환경에서는 서버를 어떻게 구성해야 하는지 알아보세요.
+            </p>
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-4 text-center">`uv` vs `pip`: 성능 비교</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">`uv`는 Rust 기반으로 구현되어 기존 `pip` 대비 월등한 속도와 낮은 메모리 사용량을 보여줍니다. (아래 데이터는 시각적 표현을 위한 예시입니다)</p>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                 <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-4 text-center">서버 구성: 개발 vs 프로덕션</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">개발 환경과 프로덕션 환경은 서로 다른 목표를 가집니다. Uvicorn 단독 실행은 개발 속도를 높여주지만, 프로덕션에서는 Gunicorn을 함께 사용해 안정성을 확보해야 합니다.</p>
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="p-2 font-semibold">고려사항</th>
+                                    <th class="p-2 font-semibold bg-blue-50 text-blue-800">Uvicorn (개발용)</th>
+                                    <th class="p-2 font-semibold bg-green-50 text-green-800">Gunicorn + Worker (프로덕션용)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="p-2 font-medium">주요 목적</td>
+                                    <td class="p-2 bg-blue-50">빠른 개발 속도</td>
+                                    <td class="p-2 bg-green-50">안정성, 확장성</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-2 font-medium">프로세스 관리</td>
+                                    <td class="p-2 bg-blue-50">단일 프로세스</td>
+                                    <td class="p-2 bg-green-50">다중 워커 프로세스 관리</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-2 font-medium">핫 리로딩</td>
+                                    <td class="p-2 bg-blue-50">✔️ 지원</td>
+                                    <td class="p-2 bg-green-50">❌ 미지원</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-medium">안정성</td>
+                                    <td class="p-2 bg-blue-50">보통</td>
+                                    <td class="p-2 bg-green-50">매우 높음</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p>이 대화형 가이드는 제공된 기술 보고서를 기반으로 제작되었습니다.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        // Tech card detail toggle
+        function toggleDetail(id) {
+            const detail = document.getElementById(id);
+            detail.classList.toggle('hidden');
+        }
+
+        // Copy code to clipboard
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.innerText = '복사됨!';
+                setTimeout(() => {
+                    button.innerText = '복사';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Tab switching logic
+        function switchTab(event, tabGroup, contentGroup) {
+            const buttons = document.querySelectorAll(`#${tabGroup} .tab-btn`);
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const contents = document.querySelectorAll(`.${contentGroup}`);
+            contents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(event.currentTarget.getAttribute('onclick').match(/'([^']+)'/)[1]).classList.remove('hidden');
+        }
+        
+        function switchSetupTab(event, tabId) {
+            const buttons = document.querySelectorAll('#setup-tabs .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const contents = document.querySelectorAll('.setup-content');
+            contents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        function switchCodeTab(event, tabId) {
+            const buttons = document.querySelectorAll('#code-tabs .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const contents = document.querySelectorAll('.code-content');
+            contents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+        
+        function switchDockerTab(event, tabId) {
+            const buttons = document.querySelectorAll('#docker-tabs .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const contents = document.querySelectorAll('.docker-content');
+            contents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+
+        // Navigation scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 60) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Chart.js implementation
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['패키지 설치 시간', '의존성 해결 시간', '메모리 사용량'],
+                datasets: [{
+                    label: 'pip',
+                    data: [100, 80, 100],
+                    backgroundColor: 'rgba(210, 199, 184, 0.6)',
+                    borderColor: 'rgba(166, 157, 141, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'uv',
+                    data: [10, 5, 40],
+                    backgroundColor: 'rgba(139, 159, 171, 0.6)',
+                    borderColor: 'rgba(139, 159, 171, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' (상대 수치)';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                         ticks: {
+                            callback: function(value, index, values) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
