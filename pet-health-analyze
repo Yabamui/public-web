@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반려동물 건강검진 데이터 분석 서비스 리포트</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container { position: relative; width: 100%; height: 350px; max-height: 400px; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .brand-gradient { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="p-0 m-0">
+
+<header class="gradient-bg text-white py-20 px-6 text-center shadow-lg relative overflow-hidden">
+    <!-- Background subtle lights -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+    
+    <div class="max-w-5xl mx-auto relative z-10">
+        <span class="bg-blue-500/20 text-blue-300 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-4 inline-block border border-blue-500/30">Business Analysis & Strategy</span>
+        <h1 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-none">반려동물 건강검진 데이터 플랫폼</h1>
+        <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-light">
+            데이터로 읽는 예방 수의학의 진화와 후발 주자를 위한 성공적인 시장 진입 프레임워크
+        </p>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+
+    <!-- Section 1: Intro Stats -->
+    <section class="mb-16">
+        <div class="bg-white rounded-3xl shadow-sm p-8 md:p-10 mb-8 border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="max-w-2xl">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4">예방 수의학의 경제적 가치</h2>
+                <p class="text-base md:text-lg leading-relaxed text-slate-600">
+                    반려동물은 고통을 직관적으로 드러내지 않는 진화론적 본능을 갖고 있어, 일상 기록과 정기 건강검진 연동 분석이 필수적입니다. 데이터 기반의 조기 발견은 질병 만성화를 차단하여 <strong class="text-blue-600">평균 반려동물 의료비의 약 50% 이상을 세이브</strong>해 줍니다.
+                </p>
+            </div>
+            <div class="bg-blue-50 px-6 py-4 rounded-2xl border border-blue-100 text-center shrink-0 w-full md:w-auto">
+                <span class="text-xs text-blue-600 font-bold uppercase tracking-wider block mb-1">장기적 경제 가치</span>
+                <span class="text-4xl font-black text-blue-600">50% +</span>
+                <span class="text-xs text-slate-500 block mt-1">의료비 감소 기대치</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 card-hover">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-6 font-bold">🏥</div>
+                <h3 class="text-slate-500 font-medium text-sm mb-1">인투펫 PIMS 제휴</h3>
+                <p class="text-3xl font-extrabold text-slate-900">2,000 + 곳</p>
+                <p class="text-xs text-slate-400 mt-2">국내 최대 규모의 병원 차트 동기화망</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 card-hover">
+                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mb-6 font-bold">📸</div>
+                <h3 class="text-slate-500 font-medium text-sm mb-1">티티케어 AI 진단</h3>
+                <p class="text-3xl font-extrabold text-slate-900">31 개 범주</p>
+                <p class="text-xs text-slate-400 mt-2">눈·피부·귀 이상 징후 실시간 판별 개수</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 card-hover">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-6 font-bold">🛡️</div>
+                <h3 class="text-slate-500 font-medium text-sm mb-1">라이펫 문진 신뢰도</h3>
+                <p class="text-3xl font-extrabold text-slate-900">93%</p>
+                <p class="text-xs text-slate-400 mt-2">건국대 수의과 대학 공동 검증 데이터</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: PIMS vs OCR -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+            <h2 class="text-2xl font-bold mb-4 flex items-center text-slate-900">
+                <span class="bg-blue-600 text-white text-xs px-2.5 py-1 rounded-md mr-3 font-semibold uppercase tracking-wider">TYPE 1</span>
+                PIMS 직접 연동 커버리지
+            </h2>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                동물병원 전자차트(Practice Information Management System)와 직접 연동하여 오입력 없는 실시간 진료 정보 및 검진 원본 데이터를 정밀 연산하는 강점이 있습니다.
+            </p>
+            <div class="chart-container">
+                <canvas id="pimsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+            <h2 class="text-2xl font-bold mb-4 flex items-center text-slate-900">
+                <span class="bg-amber-500 text-white text-xs px-2.5 py-1 rounded-md mr-3 font-semibold uppercase tracking-wider">TYPE 2</span>
+                서비스 모델별 기능 집중도
+            </h2>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                PIMS 제휴가 안 된 병원에서도 영수증 및 진료 기록 OCR, AI 자가진단을 통해 누구나 범용적으로 데이터를 수집하고 활용할 수 있는 차이를 비교합니다.
+            </p>
+            <div class="chart-container">
+                <canvas id="featureRadar"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Data Flow -->
+    <section class="mb-16 bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-10 text-center">건강검진 데이터 분석 & 융합 사이클</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-3xl mb-4 text-blue-400">🔬</div>
+                <h4 class="font-bold mb-2">1. 데이터 생성</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">병원 정기검진 및 안구/피부 카메라 촬영을 통한 데이터 원본 소스 생성</p>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-3xl mb-4 text-indigo-400">📥</div>
+                <h4 class="font-bold mb-2">2. 스마트 수집</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">PIMS 백그라운드 동기화 또는 AI 모바일 영수증 OCR 정제 기술 작동</p>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-3xl mb-4 text-emerald-400">🧠</div>
+                <h4 class="font-bold mb-2">3. 온톨로지 변환</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">어려운 수의학 검사 결과를 일반 반려인 눈높이에 맞는 용어와 통계 분석</p>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600/30 border border-amber-500/50 flex items-center justify-center text-3xl mb-4 text-amber-400">🔄</div>
+                <h4 class="font-bold mb-2">4. 통합 처방 솔루션</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">분석된 혈액 수치(신장, 간 등)에 일치하는 맞춤 영양제 처방 및 펫보험 청구</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Detailed Competitor Spectrum -->
+    <section class="mb-16">
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-8 text-center text-slate-900">국내외 주요 플랫폼 정밀 비교</h2>
+        <div class="overflow-x-auto bg-white rounded-2xl shadow-sm border border-slate-100">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead class="bg-slate-50 text-slate-700 uppercase text-xs font-semibold">
+                    <tr>
+                        <th class="p-5 border-b">플랫폼명</th>
+                        <th class="p-5 border-b">데이터 수집 경로</th>
+                        <th class="p-5 border-b">탑재 AI 및 강점 기술</th>
+                        <th class="p-5 border-b">BM 및 과금 구조</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600 divide-y divide-slate-100">
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-5 font-bold text-blue-600 text-base">인투펫</td>
+                        <td class="p-5">전국 2,000+ 병원 PIMS 실시간 연동</td>
+                        <td class="p-5 font-medium text-slate-800">예방 백신 관리, 개체 유전 알고리즘 기반 질병 도우미</td>
+                        <td class="p-5">병원 연동 무료 이용 (용품 연계 판매)</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-5 font-bold text-blue-600 text-base">티티케어</td>
+                        <td class="p-5">모바일 생체 환부 촬영 스캔</td>
+                        <td class="p-5 font-medium text-slate-800">농림부 허가 31종 이상 안구·귀·피부 질환 영상 판독 AI</td>
+                        <td class="p-5">구독 요금제 (라이트: 4.9천 원 ~ 프리미엄: 1.4만 원)</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-5 font-bold text-blue-600 text-base">촉촉한코</td>
+                        <td class="p-5">비제휴 영수증 및 진료실 녹음본 업로드</td>
+                        <td class="p-5 font-medium text-slate-800">비정형 영수증 OCR 판독 및 대화 오디오 AI 텍스트 요약</td>
+                        <td class="p-5">기본 무료 / 무제한 분석 PLUS 구독</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-5 font-bold text-blue-600 text-base">CatsMe (캣츠미)</td>
+                        <td class="p-5">고양이 안면 미세 이미지 촬영</td>
+                        <td class="p-5 font-medium text-slate-800">Feline Grimace Scale(고양이 통증 척도) 실시간 측정 기술</td>
+                        <td class="p-5">기본 진단 무료 / 멤버십 등급제</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-5 font-bold text-blue-600 text-base">똑똑집사</td>
+                        <td class="p-5">사용자 라이프사이클 기록</td>
+                        <td class="p-5 font-medium text-slate-800">온가족 실시간 돌봄 가이드라인 분담 공유 기술</td>
+                        <td class="p-5">기본 무료 및 온디바이스 보안 강화</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 5: NEW Latecomer Strategy Simulator -->
+    <section class="mb-16 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-3xl p-8 md:p-12 relative">
+        <div class="absolute top-4 right-4 bg-indigo-200/50 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Interactive tool</div>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black text-slate-900 mb-4">후발 주자 비즈니스 전략 시뮬레이터</h2>
+                <p class="text-slate-600 text-sm md:text-base max-w-xl mx-auto">
+                    이미 포화 상태에 이른 반려동물 시장에서 내가 기획한 서비스가 승산이 있을까요? 
+                    진입 전술 조합을 선택하고 성공 지수 보고서를 도출해 보세요.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <!-- Inputs column -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+                    <div>
+                        <label class="block text-slate-800 font-bold text-sm mb-2" for="target">🎯 핵심 타겟 세그먼트</label>
+                        <select id="target" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="chronic">만성질환을 앓고 있는 고위험 노령견 (신장, 간 케어)</option>
+                            <option value="breed">특정 품종 맞춤형 유전 질환 추적 케어</option>
+                            <option value="general">일반 건강 관리를 원하는 보편적 보호자 전체</option>
+                            <option value="puppy">생애 초기 예방 접종 및 사회화 집중 관리 대상</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-800 font-bold text-sm mb-2" for="tech">💾 주요 데이터 획득 방식</label>
+                        <select id="tech" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="ocr">비제휴 처방전 OCR & 진료 대화 음성 AI 요약</option>
+                            <option value="iot">목줄/웨어러블 디바이스를 통한 IoT 상시 정보 수집</option>
+                            <option value="pims">신규 제휴 병원 연동용 PIMS 커스텀 모듈 구축</option>
+                            <option value="manual">사용자가 앱 캘린더에 직접 기입하는 수동 수집</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-800 font-bold text-sm mb-2" for="revenue">💰 지속 가능한 비즈니스 모델(BM)</label>
+                        <select id="revenue" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="insurance">정밀 리포트 제출 시 매월 펫보험료가 할인되는 제휴 모델</option>
+                            <option value="kibble">진료 수치와 100% 매칭되는 사료 정기 구독 커미션</option>
+                            <option value="sub">프리미엄 정밀 분석 유료 멤버십 월 구독 형태</option>
+                            <option value="ads">무상 서비스 제공을 통한 사용자 확보 후 트래픽 광고 노출</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-800 font-bold text-sm mb-2" for="moat">⭐ 우리만의 확실한 차별화 포인트(USP)</label>
+                        <select id="moat" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="privacy">온디바이스 AI를 통한 100% 클라우드 노출 없는 개인정보 보장</option>
+                            <option value="vet">심야 응급 상황 발생 시 24시간 대응하는 가상 수의사 회진 시스템</option>
+                            <option value="family">부부, 부모 등 실시간 다중 가이드라인 돌봄 동기화 보장</option>
+                            <option value="none">동종 경쟁사 대비 저렴하고 예쁜 대시보드 인터페이스 디자인</option>
+                        </select>
+                    </div>
+
+                    <button onclick="runSimulation()" class="w-full brand-gradient hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-xl transition-all uppercase tracking-wide">
+                        전략 시뮬레이션 가동하기
+                    </button>
+                </div>
+
+                <!-- Outputs column -->
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-slate-900 font-black text-xl mb-4">시장성 진입 분석 결과 보고서</h3>
+                        
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-slate-500">시장 안착 예상 성공률</span>
+                                <span id="score-text" class="text-2xl font-black text-blue-600">-- %</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
+                                <div id="score-bar" class="bg-blue-600 h-full w-0 transition-all duration-1000"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-sm" id="result-text-container">
+                            <p class="text-slate-400 italic text-center py-10">
+                                좌측의 전술 조합을 선택하고 '시뮬레이션 가동하기' 버튼을 클릭하시면 실시간 벤치마킹 피드백이 생성됩니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="badge-container" class="mt-6 pt-6 border-t border-slate-100 flex gap-2 overflow-x-auto whitespace-nowrap hidden">
+                        <!-- badges generated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="bg-slate-900 text-slate-400 py-16 px-6 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+            <h2 class="text-2xl font-bold text-white mb-2">Pet Health Data Analysis</h2>
+            <p class="text-xs">© 2026 반려동물 건강검진 데이터 분석 플랫폼 트렌드</p>
+        </div>
+        <div class="text-xs text-slate-500 max-w-md text-right">
+            본 리포트는 최신 펫테크 플랫폼의 기술 스펙과 서비스 모델을 분석하여 작성되었습니다. 
+            이미지 판독 결과는 수의사 진료를 대체할 수 없으며 보조 도구로 활용을 권장합니다.
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Chart 1: PIMS Coverage (Bar)
+    const ctx1 = document.getElementById('pimsChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['인투펫 (국내 최대)', 'WAAL (우리엔)', 'PetDesk (미국)', 'Pulse (글로벌)'],
+            datasets: [{
+                label: '제휴 및 연동 병원 수 (단위: 개소)',
+                data: [2000, 1500, 1800, 1200],
+                backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'],
+                borderRadius: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Chart 2: Service Strengths (Radar)
+    const ctx2 = document.getElementById('featureRadar').getContext('2d');
+    new Chart(ctx2, {
+        type: 'radar',
+        data: {
+            labels: ['데이터 정확도', '병원 접근성', '부가 서비스(케어 연계)', '비용 효율성', '실시간성'],
+            datasets: [{
+                label: 'PIMS 연동형 (인투펫 등)',
+                data: [95, 60, 85, 90, 95],
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 2
+            }, {
+                label: '비정형/스캔형 (티티케어 등)',
+                data: [75, 95, 80, 85, 80],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: '#e2e8f0' },
+                    grid: { color: '#e2e8f0' },
+                    pointLabels: { font: { size: 11, weight: '600' }, color: '#475569' },
+                    suggestedMin: 50,
+                    suggestedMax: 100
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12 } }
+            }
+        }
+    });
+
+    // Simulation Logic
+    function runSimulation() {
+        const target = document.getElementById('target').value;
+        const tech = document.getElementById('tech').value;
+        const revenue = document.getElementById('revenue').value;
+        const moat = document.getElementById('moat').value;
+
+        let score = 30; // base score
+
+        // 1. Target Scoring
+        if (target === 'chronic') score += 20; // High margin pain point
+        else if (target === 'breed') score += 18; // Very customized niche
+        else if (target === 'puppy') score += 12; // Moderate churn risk
+        else score += 5; // Red ocean high market cost
+
+        // 2. Tech Scoring
+        if (tech === 'ocr') score += 20; // Fast entry, circumvents PIMS monopoly
+        else if (tech === 'iot') score += 15; // Hard to scale hardware but high barrier
+        else if (tech === 'pims') score += 8; // Super hard for latecomer
+        else score += 3; // Weak barrier
+
+        // 3. Revenue Scoring
+        if (revenue === 'insurance') score += 20; // Best synergy with healthcare
+        else if (revenue === 'kibble') score += 17; // Direct monetization loop
+        else if (revenue === 'sub') score += 12; // Tough to pay for unless highly high quality
+        else score += 5; // Ad-based model has lower profit margin for niche
+
+        // 4. Moat / USP Scoring
+        if (moat === 'vet') score += 20; // Great solution for urgent care anxiety
+        else if (moat === 'privacy') score += 15; // High tech differentiator
+        else if (moat === 'family') score += 15; // Great lock-in for family
+        else score += 4; // Design alone cannot survive
+
+        // Keep inside reasonable bounds
+        if (score > 95) score = 95;
+        if (score < 30) score = 30;
+
+        // Animate Score Bar
+        const bar = document.getElementById('score-bar');
+        const text = document.getElementById('score-text');
+        
+        bar.style.width = score + '%';
+        text.innerText = score + '%';
+
+        // Apply colors based on score
+        if (score >= 80) {
+            bar.className = "h-full transition-all duration-1000 bg-emerald-500";
+            text.className = "text-2xl font-black text-emerald-500 animate-pulse";
+        } else if (score >= 60) {
+            bar.className = "h-full transition-all duration-1000 bg-blue-500";
+            text.className = "text-2xl font-black text-blue-500";
+        } else {
+            bar.className = "h-full transition-all duration-1000 bg-amber-500";
+            text.className = "text-2xl font-black text-amber-500";
+        }
+
+        // Generate tailored analysis report
+        let feedbackHTML = `
+            <div class="space-y-4 text-slate-700">
+                <p class="font-bold text-slate-900 border-b pb-2">🎯 전략적 핵심 리포트</p>
+        `;
+
+        // Strength Feedback
+        feedbackHTML += `<div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-xs md:text-sm text-emerald-800">`;
+        feedbackHTML += `<strong class="block mb-1 text-emerald-900">✔️ 뛰어난 진입 소구점</strong>`;
+        if (target === 'chronic' || target === 'breed') {
+            feedbackHTML += `기존의 인투펫, 티티케어가 다루지 못했던 고부가가치 타겟을 선점했습니다. 이 시장은 의료비 지출 규모가 큰 우량 고객층이므로 락인(Lock-in) 효과가 큽니다.`;
+        } else {
+            feedbackHTML += `보편적인 고객 타겟을 선택하셨습니다. 매력적이지만 초기 마케팅 비용이 거대 플랫폼 대비 상당히 지출될 수 있습니다.`;
+        }
+        feedbackHTML += `</div>`;
+
+        // Risk & Weakness Feedback
+        feedbackHTML += `<div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-xs md:text-sm text-amber-800">`;
+        feedbackHTML += `<strong class="block mb-1 text-amber-900">⚠️ 잠재적 위협 요인</strong>`;
+        if (tech === 'pims') {
+            feedbackHTML += `병원 차트(PIMS) 연동 시도는 막강한 진입장벽입니다. 이미 인투펫과 WAAL이 시장 제휴 병원들의 90% 이상을 차지하고 있어 신규 병원이 귀하의 SDK를 탑재할 매력도가 매우 낮습니다. 우회 데이터 획득 전략(OCR 등)을 강력히 권장합니다.`;
+        } else if (tech === 'manual') {
+            feedbackHTML += `사용자의 수동 기입에 의존하는 데이터 수집은 극심한 피로를 유발해 초기 1개월 내 이탈율이 70%가 넘어섭니다. 반드시 카메라 및 자동화 수집 수단을 결합하세요.`;
+        } else {
+            feedbackHTML += `OCR과 음성 AI 혹은 IoT 센서 기반의 우회 데이터 획득 경로는 매우 현명한 전술입니다. 병원의 물리적 허가 장벽을 넘는 효과적인 돌파구입니다.`;
+        }
+        feedbackHTML += `</div>`;
+
+        // Strategic Next Steps
+        feedbackHTML += `<div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-xs md:text-sm text-blue-800">`;
+        feedbackHTML += `<strong class="block mb-1 text-blue-900">💡 향후 밸류 업그레이드 조언</strong>`;
+        if (revenue === 'insurance') {
+            feedbackHTML += `펫보험 결합을 선택한 것은 환상적입니다. 금융 회사들과의 API 동맹을 통해 실시간 청구 및 프리미엄 할인을 제공하는 것이 핵심 마일스톤이 될 것입니다.`;
+        } else if (revenue === 'kibble') {
+            feedbackHTML += `식사 처방 커미션 모델은 고지혈증, 간 수치 상승 등 정밀 병리 데이터와 원터치 정기구독 루프가 완벽히 결합되어야 효율을 발휘합니다.`;
+        } else {
+            feedbackHTML += `광고와 단순 구독 방식은 데이터의 가치를 낮게 평가하는 경향이 있습니다. 실질적인 커머스 및 금융 혜택으로의 변환을 염두에 두십시오.`;
+        }
+        feedbackHTML += `</div></div>`;
+
+        document.getElementById('result-text-container').innerHTML = feedbackHTML;
+
+        // Generate Badges
+        const badgeContainer = document.getElementById('badge-container');
+        badgeContainer.classList.remove('hidden');
+        
+        let badges = '';
+        if (score >= 80) {
+            badges += `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">✨ 유니콘 가능성</span>`;
+            badges += `<span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200">🚀 강력한 모트 보유</span>`;
+        } else if (score >= 60) {
+            badges += `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">📈 안정적 진입 가능</span>`;
+            badges += `<span class="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">🛠️ 부분 수정 필요</span>`;
+        } else {
+            badges += `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">⚠️ 전면 재설계 권장</span>`;
+            badges += `<span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full border border-red-200">🛑 병목 구간 봉착</span>`;
+        }
+        badgeContainer.innerHTML = badges;
+    }
+</script>
+
+</body>
+</html>
